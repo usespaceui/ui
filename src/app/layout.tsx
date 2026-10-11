@@ -16,6 +16,7 @@ import { Mode, type LayoutMode } from '@/components/providers/layout-mode-provid
 import { ThemeCookieSync, THEME_COOKIE_KEY } from '@/components/providers/theme-cookie-sync'
 import { ThemeLockScript, THEME_LOCKED_ROUTES } from '@/components/providers/theme-lock-provider'
 import { PostHogProvider } from '@/components/providers/posthog-provider'
+import { UmamiScript } from '@/components/providers/umami-script'
 import { PageTreesProvider } from '@/components/providers/page-trees-provider'
 import { librarySource, resourcesSource, source } from '@/lib/source'
 import NextTopLoader from 'nextjs-toploader'
@@ -199,6 +200,7 @@ export default async function Layout({ children }: { children: ReactNode }) {
             </NuqsAdapter>
           </RootProvider>
         </PostHogProvider>
+        <UmamiScript />
         <Analytics />
         <SpeedInsights />
       </body>
