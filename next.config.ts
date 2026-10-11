@@ -60,6 +60,7 @@ const config: NextConfig = {
   partialPrefetching: true,
   reactStrictMode: false,
   reactCompiler: true,
+  productionBrowserSourceMaps: false,
   typescript: {
     ignoreBuildErrors: true,
   },
