@@ -42,8 +42,9 @@
   "engines": {
     "node": ">=20"
   },
+  "packageManager": "pnpm@10.4.1",
   "scripts": {
-    "build": "next build && node scripts/fix-standalone.mjs",
+    "build": "next build",
     "dev": "next dev --turbo",
     "start": "next start",
     "postinstall": "fumadocs-mdx",
@@ -58,9 +59,7 @@
     "format:check": "prettier --check \"{src,public,scripts,supabase}/**/*.{ts,tsx,json,css,mdx}\" --cache",
     "launch": "node scripts/launch-render.mjs",
     "launch:all": "pnpm launch && pnpm launch --res 4k",
-    "cards": "node scripts/cards-render.mjs",
-    "build:cf": "node scripts/build-cloudflare.mjs",
-    "deploy:cf": "node scripts/build-cloudflare.mjs && wrangler deploy --minify"
+    "cards": "node scripts/cards-render.mjs"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",
@@ -135,7 +134,6 @@
     "zod-v4": "npm:zod@^4.5.4"
   },
   "devDependencies": {
-    "@opennextjs/cloudflare": "^1.20.10",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/canvas-confetti": "^1.9.0",
     "@types/mdx": "^2.0.14",
@@ -148,8 +146,7 @@
     "tailwind-scrollbar": "^4.0.2",
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",
-    "vercel": "^59.20.0",
-    "wrangler": "^4.149.0"
+    "vercel": "^59.20.0"
   },
   "overrides": {
     "mdast-util-to-markdown": "2.1.2"
