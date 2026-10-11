@@ -1,19 +1,62 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-// Fix monorepo path mismatch for OpenNext on Windows
+// Fix monorepo path mismatch for OpenNext across OS environments (Windows, Linux CI)
 const monorepoDotNext = path.resolve('.next/standalone/apps/www/.next');
 const standaloneDotNext = path.resolve('.next/standalone/.next');
+const sourceServer = path.resolve('.next/server');
+
+// Ensure both standalone roots exist
+const targetServers = [
+  path.resolve('.next/standalone/.next/server'),
+  path.resolve('.next/standalone/apps/www/.next/server'),
+];
+
+for (const targetServer of targetServers) {
+  fs.mkdirSync(targetServer, { recursive: true });
+
+  if (fs.existsSync(sourceServer)) {
+    // Copy missing top-level files from .next/server to targetServer
+    const files = fs.readdirSync(sourceServer);
+    for (const file of files) {
+      const src = path.join(sourceServer, file);
+      const dest = path.join(targetServer, file);
+      if (fs.statSync(src).isFile() && !fs.existsSync(dest)) {
+        fs.copyFileSync(src, dest);
+      }
+    }
+  }
+
+  // Next 16 Node proxy/middleware fix: ensure server/middleware.js and .nft.json exist
+  const mwDest = path.join(targetServer, 'middleware.js');
+  if (!fs.existsSync(mwDest)) {
+    const mwSrc = path.join(sourceServer, 'middleware.js');
+    if (fs.existsSync(mwSrc)) {
+      fs.copyFileSync(mwSrc, mwDest);
+    } else {
+      fs.writeFileSync(mwDest, 'module.exports = { default: () => new Response(null, { status: 200 }) };');
+    }
+  }
+
+  const nftDest = path.join(targetServer, 'middleware.js.nft.json');
+  if (!fs.existsSync(nftDest)) {
+    const nftSrc = path.join(sourceServer, 'middleware.js.nft.json');
+    if (fs.existsSync(nftSrc)) {
+      fs.copyFileSync(nftSrc, nftDest);
+    } else {
+      fs.writeFileSync(nftDest, JSON.stringify({ version: 1, files: [] }));
+    }
+  }
+}
 
 if (fs.existsSync(monorepoDotNext)) {
   fs.cpSync(monorepoDotNext, standaloneDotNext, { recursive: true });
   console.log('[fix-standalone] Mirrored monorepo standalone .next directory successfully.');
-} else {
-  const standaloneServer = path.join(standaloneDotNext, 'server');
-  if (!fs.existsSync(standaloneServer)) {
-    fs.mkdirSync(standaloneServer, { recursive: true });
-  }
+} else if (fs.existsSync(standaloneDotNext)) {
+  fs.cpSync(standaloneDotNext, monorepoDotNext, { recursive: true });
+  console.log('[fix-standalone] Mirrored root standalone .next directory to monorepo successfully.');
 }
+
 
 // Ensure sharp stubs exist to prevent native C++ addon (.node) failures during Cloudflare Worker bundling
 function ensureSharpStub(targetDir) {
