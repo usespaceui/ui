@@ -61,7 +61,7 @@
     "launch:all": "pnpm launch && pnpm launch --res 4k",
     "cards": "node scripts/cards-render.mjs",
     "build:cf": "opennextjs-cloudflare build",
-    "deploy:cf": "opennextjs-cloudflare build && wrangler deploy"
+    "deploy:cf": "opennextjs-cloudflare build && wrangler deploy --minify"
   },
   "dependencies": {
     "@ai-sdk/openai": "^4.0.60",
