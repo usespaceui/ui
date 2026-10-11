@@ -68,9 +68,6 @@ const config: NextConfig = {
     turbopackRustReactCompiler: true,
     useOffline: true,
   },
-  outputFileTracingIncludes: {
-    '/llms.mdx/**': ['./src/content/**/*'],
-  },
   async rewrites() {
     return {
       // Transparent proxy: /components/* → served by the library/[[...slug]] route
