@@ -46,8 +46,7 @@ export async function generateMetadata(props: { params: Promise<{ slug: string[]
   const { slug } = await props.params
   if (slug[0] === '_empty') return {}
   const page = source.getPage(slug)
-  if (!page) notFound()
-  const image = ['/docs-og', ...slug, 'image.png'].join('/')
+  const image = '/og-image.png'
   return {
     title: page.data.title,
     description: page.data.description,
