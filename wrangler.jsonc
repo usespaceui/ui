@@ -4,9 +4,6 @@
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-09-01",
   "compatibility_flags": ["nodejs_compat"],
-  "limits": {
-    "cpu_ms": 30000
-  },
   "minify": true,
   "assets": {
     "directory": ".open-next/assets",

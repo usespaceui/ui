@@ -86,8 +86,18 @@ function patchNextServerMiddleware(targetDir) {
   }
 }
 
-patchNextServerMiddleware(path.resolve('.next/standalone'));
-patchNextServerMiddleware(path.resolve('../../node_modules/.pnpm'));
+const patchTargets = [
+  path.resolve('.next/standalone'),
+  path.resolve('node_modules'),
+  path.resolve('node_modules/.pnpm'),
+  path.resolve('../../node_modules'),
+  path.resolve('../../node_modules/.pnpm'),
+];
+for (const target of patchTargets) {
+  if (fs.existsSync(target)) {
+    patchNextServerMiddleware(target);
+  }
+}
 
 console.log('[fix-standalone] Mirrored all standalone manifests, BUILD_ID, and server files successfully.');
 
