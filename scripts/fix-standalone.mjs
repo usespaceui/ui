@@ -64,6 +64,31 @@ for (const targetDir of targetDotNextDirs) {
   }
 }
 
+// Patch NextServer getMiddlewareManifest to avoid dynamic require of middleware-manifest.json in workerd
+function patchNextServerMiddleware(targetDir) {
+  if (!fs.existsSync(targetDir)) return;
+  const entries = fs.readdirSync(targetDir, { recursive: true });
+  for (const entry of entries) {
+    if (typeof entry === 'string' && entry.endsWith('next-server.js')) {
+      const fullPath = path.join(targetDir, entry);
+      try {
+        let content = fs.readFileSync(fullPath, 'utf8');
+        if (content.includes('require(this.middlewareManifestPath)')) {
+          content = content.replace(
+            /require\s*\(\s*this\.middlewareManifestPath\s*\)/g,
+            '({version:3,middleware:{},sortedMiddleware:[],functions:{}})'
+          );
+          fs.writeFileSync(fullPath, content);
+          console.log(`[fix-standalone] Patched getMiddlewareManifest in ${entry}`);
+        }
+      } catch {}
+    }
+  }
+}
+
+patchNextServerMiddleware(path.resolve('.next/standalone'));
+patchNextServerMiddleware(path.resolve('../../node_modules/.pnpm'));
+
 console.log('[fix-standalone] Mirrored all standalone manifests, BUILD_ID, and server files successfully.');
 
 

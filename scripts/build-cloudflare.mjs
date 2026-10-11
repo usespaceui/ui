@@ -22,10 +22,31 @@ execSync('npx opennextjs-cloudflare build --skipNextBuild', { stdio: 'inherit' }
 
 const handlerPath = path.resolve('.open-next/server-functions/default/handler.mjs');
 if (fs.existsSync(handlerPath)) {
+  // Pre-minify patch: Next.js getMiddlewareManifest attempts to dynamically require middleware-manifest.json
+  // which does not exist as a physical file on workerd. Replace it with the inlined manifest structure.
+  let handlerCode = fs.readFileSync(handlerPath, 'utf8');
+  handlerCode = handlerCode.replace(
+    /require\s*\(\s*this\.middlewareManifestPath\s*\)/g,
+    '({version:3,middleware:{},sortedMiddleware:[],functions:{}})'
+  );
+  fs.writeFileSync(handlerPath, handlerCode);
+
   console.log('🗜️  [build-cloudflare] Minifying handler.mjs to guarantee size < 64 MiB...');
   execSync(`npx esbuild "${handlerPath}" --minify --allow-overwrite --outfile="${handlerPath}"`, {
     stdio: 'inherit',
   });
+
+  // Post-minify patch: esbuild re-introduces __require which throws "Dynamic require ... is not supported".
+  // Restore __require to real require (workerd nodejs_compat) and ensure middleware-manifest is not dynamically required.
+  let minCode = fs.readFileSync(handlerPath, 'utf8');
+  minCode = minCode
+    .replace(/(?<![.#$\w])__require\d?\(/g, 'require(')
+    .replace(/(?<![.#$\w])__require\d?\./g, 'require.');
+  minCode = minCode.replace(
+    /require\s*\(\s*this\.middlewareManifestPath\s*\)/g,
+    '({version:3,middleware:{},sortedMiddleware:[],functions:{}})'
+  );
+  fs.writeFileSync(handlerPath, minCode);
 
   const stats = fs.statSync(handlerPath);
   const sizeMb = (stats.size / (1024 * 1024)).toFixed(2);
