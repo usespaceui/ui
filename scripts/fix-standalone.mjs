@@ -1,33 +1,55 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-// Fix monorepo path mismatch for OpenNext across OS environments (Windows, Linux CI)
-const monorepoDotNext = path.resolve('.next/standalone/apps/www/.next');
-const standaloneDotNext = path.resolve('.next/standalone/.next');
-const sourceServer = path.resolve('.next/server');
-
-// Ensure both standalone roots exist
-const targetServers = [
-  path.resolve('.next/standalone/.next/server'),
-  path.resolve('.next/standalone/apps/www/.next/server'),
+// Fix monorepo path mismatch and missing standalone manifests (BUILD_ID, *.json) for OpenNext across OS environments (Windows, Linux CI)
+const sourceDotNext = path.resolve('.next');
+const targetDotNextDirs = [
+  path.resolve('.next/standalone/.next'),
+  path.resolve('.next/standalone/apps/www/.next'),
 ];
 
-for (const targetServer of targetServers) {
+for (const targetDir of targetDotNextDirs) {
+  const targetServer = path.join(targetDir, 'server');
+  fs.mkdirSync(targetDir, { recursive: true });
   fs.mkdirSync(targetServer, { recursive: true });
 
-  if (fs.existsSync(sourceServer)) {
-    // Copy missing top-level files from .next/server to targetServer
-    const files = fs.readdirSync(sourceServer);
-    for (const file of files) {
-      const src = path.join(sourceServer, file);
-      const dest = path.join(targetServer, file);
+  // 1. Copy all root .next manifests and metadata (BUILD_ID, required-server-files.json, *.json)
+  if (fs.existsSync(sourceDotNext)) {
+    const rootEntries = fs.readdirSync(sourceDotNext);
+    for (const entry of rootEntries) {
+      const src = path.join(sourceDotNext, entry);
+      const dest = path.join(targetDir, entry);
       if (fs.statSync(src).isFile() && !fs.existsSync(dest)) {
         fs.copyFileSync(src, dest);
       }
     }
   }
 
-  // Next 16 Node proxy/middleware fix: ensure server/middleware.js and .nft.json exist
+  // Guarantee BUILD_ID exists in standalone directory
+  const buildIdPath = path.join(targetDir, 'BUILD_ID');
+  if (!fs.existsSync(buildIdPath)) {
+    const srcBuildId = path.join(sourceDotNext, 'BUILD_ID');
+    if (fs.existsSync(srcBuildId)) {
+      fs.copyFileSync(srcBuildId, buildIdPath);
+    } else {
+      fs.writeFileSync(buildIdPath, 'standalone-build-id\n');
+    }
+  }
+
+  // 2. Copy missing server files from .next/server to targetServer
+  const sourceServer = path.join(sourceDotNext, 'server');
+  if (fs.existsSync(sourceServer)) {
+    const serverEntries = fs.readdirSync(sourceServer);
+    for (const entry of serverEntries) {
+      const src = path.join(sourceServer, entry);
+      const dest = path.join(targetServer, entry);
+      if (fs.statSync(src).isFile() && !fs.existsSync(dest)) {
+        fs.copyFileSync(src, dest);
+      }
+    }
+  }
+
+  // 3. Next 16 Node proxy/middleware fix: ensure server/middleware.js and .nft.json exist
   const mwDest = path.join(targetServer, 'middleware.js');
   if (!fs.existsSync(mwDest)) {
     const mwSrc = path.join(sourceServer, 'middleware.js');
@@ -49,13 +71,16 @@ for (const targetServer of targetServers) {
   }
 }
 
+const monorepoDotNext = targetDotNextDirs[1];
+const standaloneDotNext = targetDotNextDirs[0];
+
 if (fs.existsSync(monorepoDotNext)) {
   fs.cpSync(monorepoDotNext, standaloneDotNext, { recursive: true });
-  console.log('[fix-standalone] Mirrored monorepo standalone .next directory successfully.');
-} else if (fs.existsSync(standaloneDotNext)) {
-  fs.cpSync(standaloneDotNext, monorepoDotNext, { recursive: true });
-  console.log('[fix-standalone] Mirrored root standalone .next directory to monorepo successfully.');
 }
+if (fs.existsSync(standaloneDotNext)) {
+  fs.cpSync(standaloneDotNext, monorepoDotNext, { recursive: true });
+}
+console.log('[fix-standalone] Mirrored all standalone manifests, BUILD_ID, and server files successfully.');
 
 
 // Ensure sharp stubs exist to prevent native C++ addon (.node) failures during Cloudflare Worker bundling
