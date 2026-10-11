@@ -59,8 +59,8 @@
     "launch": "node scripts/launch-render.mjs",
     "launch:all": "pnpm launch && pnpm launch --res 4k",
     "cards": "node scripts/cards-render.mjs",
-    "build:cf": "opennextjs-cloudflare build",
-    "deploy:cf": "opennextjs-cloudflare build && wrangler deploy --minify"
+    "build:cf": "node scripts/build-cloudflare.mjs",
+    "deploy:cf": "node scripts/build-cloudflare.mjs && wrangler deploy --minify"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",
