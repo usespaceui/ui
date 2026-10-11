@@ -36,17 +36,10 @@ for (const targetDir of targetDotNextDirs) {
     }
   }
 
-  // 2. Copy missing server files from .next/server to targetServer
+  // 2. Recursively copy entire server directory (including chunks/ with [turbopack]_runtime.js)
   const sourceServer = path.join(sourceDotNext, 'server');
   if (fs.existsSync(sourceServer)) {
-    const serverEntries = fs.readdirSync(sourceServer);
-    for (const entry of serverEntries) {
-      const src = path.join(sourceServer, entry);
-      const dest = path.join(targetServer, entry);
-      if (fs.statSync(src).isFile() && !fs.existsSync(dest)) {
-        fs.copyFileSync(src, dest);
-      }
-    }
+    fs.cpSync(sourceServer, targetServer, { recursive: true });
   }
 
   // 3. Next 16 Node proxy/middleware fix: ensure server/middleware.js and .nft.json exist
@@ -71,15 +64,6 @@ for (const targetDir of targetDotNextDirs) {
   }
 }
 
-const monorepoDotNext = targetDotNextDirs[1];
-const standaloneDotNext = targetDotNextDirs[0];
-
-if (fs.existsSync(monorepoDotNext)) {
-  fs.cpSync(monorepoDotNext, standaloneDotNext, { recursive: true });
-}
-if (fs.existsSync(standaloneDotNext)) {
-  fs.cpSync(standaloneDotNext, monorepoDotNext, { recursive: true });
-}
 console.log('[fix-standalone] Mirrored all standalone manifests, BUILD_ID, and server files successfully.');
 
 
