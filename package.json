@@ -59,7 +59,9 @@
     "clean:vercel": "node scripts/clean-vercel-deployments.mjs",
     "launch": "node scripts/launch-render.mjs",
     "launch:all": "pnpm launch && pnpm launch --res 4k",
-    "cards": "node scripts/cards-render.mjs"
+    "cards": "node scripts/cards-render.mjs",
+    "build:cf": "opennextjs-cloudflare build",
+    "deploy:cf": "opennextjs-cloudflare build && wrangler deploy"
   },
   "dependencies": {
     "@ai-sdk/openai": "^4.0.60",
@@ -155,6 +157,7 @@
     "zod-v4": "npm:zod@^4.5.4"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "^1.20.10",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/canvas-confetti": "^1.9.0",
     "@types/mdx": "^2.0.14",
@@ -166,7 +169,8 @@
     "postcss": "^8.5.28",
     "tailwind-scrollbar": "^4.0.2",
     "tailwindcss": "^4.3.3",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "wrangler": "^4.149.0"
   },
   "overrides": {
     "mdast-util-to-markdown": "2.1.2"

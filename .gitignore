@@ -35,6 +35,8 @@ pnpm-lock.yaml
 
 # others
 .vercel
+/.open-next/
+.wrangler/
 next-env.d.ts
 .turbo
 output.txt
